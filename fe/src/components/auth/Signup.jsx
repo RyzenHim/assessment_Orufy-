@@ -1,55 +1,58 @@
+import axiosInstance from "../../api/axios";
+
 const Signup = () => {
+
     const handleSignup = (e) => {
         e.preventDefault();
+
+        axiosInstance()
+
+
     };
 
     return (
-        <div>
-            <h1 className="mb-8 text-4xl font-bold text-[#071074]">
+        <div className="min-w-full" >
+            <h1 className="mb-8 text-[24px] font-bold text-[#071074] leading-snug">
                 Create Productr Account
             </h1>
 
             <form onSubmit={handleSignup} className="space-y-4">
-
                 <div>
-                    <label className="mb-2 block text-sm">
+                    <label className="mb-1.5 block text-[14px] font-medium text-gray-700">
                         First Name
                     </label>
-
                     <input
                         type="text"
                         placeholder="Enter your first name"
-                        className="h-[50px] w-full rounded-md border px-4"
+                        className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
                     />
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
                         Last Name
                     </label>
-
                     <input
                         type="text"
                         placeholder="Enter your last name"
-                        className="h-[50px] w-full rounded-md border px-4"
+                        className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
                     />
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
                         Email or Phone number
                     </label>
-
                     <input
                         type="text"
                         placeholder="Enter email or phone number"
-                        className="h-[50px] w-full rounded-md border px-4"
+                        className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
                     />
                 </div>
 
                 <button
                     type="submit"
-                    className="h-[50px] w-full rounded-md bg-[#071074] text-white"
+                    className="h-[46px] w-full rounded-lg bg-[#071074] text-sm font-semibold text-white hover:bg-[#0a1899] transition-colors"
                 >
                     Sign Up
                 </button>

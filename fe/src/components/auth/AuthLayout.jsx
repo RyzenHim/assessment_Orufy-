@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Login from "./Login";
-import Signup from "./Singup";
+import Signup from "./Signup";
 
 import bigHeroImg from "../../assets/mainherobg.png";
 import smallHeroImg from "../../assets/card_runner.png";
@@ -10,56 +10,56 @@ const AuthLayout = () => {
     const [showSignup, setShowSignup] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[#F6F6F8] p-6">
-            <div className="mx-auto flex h-[700px] max-w-[1400px] gap-20">
+        <div className="h-screen w-screen overflow-hidden bg-[#F0F0F5] flex items-center justify-center p-10">
 
-                {/* Left Section */}
-                <div className="relative w-[520px] overflow-hidden rounded-md border border-blue-500">
+            <div className="flex w-full h-full gap-10">
 
+                <div className="relative w-1/2 h-full flex-shrink-0 rounded-2xl overflow-hidden">
                     <img
                         src={bigHeroImg}
                         alt="background"
                         className="h-full w-full object-cover"
                     />
 
-                    <img
-                        src={logo}
-                        alt="logo"
-                        className="absolute left-5 top-5 w-[110px]"
-                    />
+                    <div className="absolute top-5 left-5 flex items-center gap-2">
+                        <img src={logo} alt="logo" className="w-[100px]" />
+                    </div>
 
-                    <img
-                        src={smallHeroImg}
-                        alt="runner"
-                        className="absolute left-1/2 top-1/2 w-[230px] -translate-x-1/2 -translate-y-1/2"
-                    />
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <img
+                            src={smallHeroImg}
+                            alt="runner"
+                            className="object-cover"
+                        />
+                    </div>
                 </div>
 
-                {/* Right Section */}
-                <div className="flex flex-1 flex-col justify-center">
+                <div className="flex w-1/2 h-full flex-col items-center justify-center">
 
-                    <div className="max-w-[420px]">
+                    <div className="flex justify-center min-w-3/5 h-full  mt-30 ">
                         {showSignup ? <Signup /> : <Login />}
                     </div>
 
-                    <div className="mt-40">
+                    <div className="min-w-3/5 flex items-center justify-center mb-14">
                         <button
                             onClick={() => setShowSignup((prev) => !prev)}
-                            className="w-[320px] rounded-md border bg-white p-4 shadow-sm"
+                            className="w-full rounded-xl border border-gray-200 bg-white px-5 py-4  shadow-sm"
                         >
-                            <p className="text-sm text-gray-500">
+                            <p className="text-[14px] text-gray-400">
                                 {showSignup
                                     ? "Already have a Productr Account?"
                                     : "Don't have a Productr Account"}
                             </p>
-
-                            <p className="font-semibold text-[#071074]">
+                            <p className="text-[14px] font-semibold text-[#071074]">
                                 {showSignup ? "Login Here" : "SignUp Here"}
                             </p>
                         </button>
                     </div>
+
                 </div>
+
             </div>
+
         </div>
     );
 };
