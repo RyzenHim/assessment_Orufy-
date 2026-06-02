@@ -1,0 +1,31 @@
+import axios from "axios";
+
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || "",
+  withCredentials: true,
+});
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      localStorage.removeItem("token");
+      alert("Session expired");
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+export default axiosInstance;
