@@ -1,32 +1,61 @@
-import React from 'react'
-
-const Singup = () => {
-    const handleSignUp = async (e) => {
-        e.preventDefault()
-
-
-
-    }
+const Signup = () => {
+    const handleSignup = (e) => {
+        e.preventDefault();
+    };
 
     return (
+        <div>
+            <h1 className="mb-8 text-4xl font-bold text-[#071074]">
+                Create Productr Account
+            </h1>
 
+            <form onSubmit={handleSignup} className="space-y-4">
 
+                <div>
+                    <label className="mb-2 block text-sm">
+                        First Name
+                    </label>
 
-        <div >
+                    <input
+                        type="text"
+                        placeholder="Enter your first name"
+                        className="h-[50px] w-full rounded-md border px-4"
+                    />
+                </div>
 
-            <h1>Create Productr Acount</h1>
-            <form onSubmit={handleSignUp} >
-                <label>First Name</label>
-                <input className='border p-3 bg-[#FFFFFF]' type='text' placeholder='Enter your first name' />
-                <label>Last Name</label>
-                <input className='border p-3 bg-[#FFFFFF]' type='text' placeholder='Enter your last name' />
-                <label>Email or Phone number</label>
-                <input className='border p-3 bg-[#FFFFFF]' type="text" placeholder='Enter email or phone number' />
-                <button className='bg-[#071074] border' type='submit'>SignUp</button>
+                <div>
+                    <label className="mb-2 block text-sm">
+                        Last Name
+                    </label>
+
+                    <input
+                        type="text"
+                        placeholder="Enter your last name"
+                        className="h-[50px] w-full rounded-md border px-4"
+                    />
+                </div>
+
+                <div>
+                    <label className="mb-2 block text-sm">
+                        Email or Phone number
+                    </label>
+
+                    <input
+                        type="text"
+                        placeholder="Enter email or phone number"
+                        className="h-[50px] w-full rounded-md border px-4"
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    className="h-[50px] w-full rounded-md bg-[#071074] text-white"
+                >
+                    Sign Up
+                </button>
             </form>
-
         </div>
-    )
-}
+    );
+};
 
-export default Singup
+export default Signup;
