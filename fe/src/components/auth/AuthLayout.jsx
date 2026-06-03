@@ -29,7 +29,8 @@ const AuthLayout = () => {
                         <img
                             src={smallHeroImg}
                             alt="runner"
-                            className="object-cover"
+                            className="object-cover w-[312px] h-[480px]"
+
                         />
                     </div>
                 </div>
