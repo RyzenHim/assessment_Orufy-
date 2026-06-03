@@ -9,7 +9,9 @@ const Signup = () => {
         identifier: ""
     })
 
-
+    const [showOtp, setShowOtp] = useState(false)
+    const [timer, setShowTimer] = useState(20)
+    const [canResend, setCanResend] = useState(false)
 
     const handleChange = (e) => {
 
@@ -27,10 +29,7 @@ const Signup = () => {
     const handleSignup = async (e) => {
         e.preventDefault();
         console.log(form)
-
         signUpApi(form)
-
-
     };
 
     return (

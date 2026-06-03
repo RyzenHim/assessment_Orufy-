@@ -2,6 +2,7 @@ const User = require("../models/user_model");
 const Otp = require("../models/otp_model");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
+const sendOtpMail = require("../utils/sendOtpMail");
 
 const detectIdentifierType = (identifier) => {
   if (validator.isEmail(identifier)) {
@@ -63,6 +64,10 @@ exports.signup = async (req, res) => {
         new: true,
       },
     );
+
+    if (identifierType === "email") {
+      await sendOtpMail(identifier, otp);
+    }
 
     return res.status(200).json({
       success: true,
@@ -182,11 +187,8 @@ exports.verifyLoginOtp = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-
       message: "Login successful",
-
       token,
-
       user,
     });
   } catch (err) {
