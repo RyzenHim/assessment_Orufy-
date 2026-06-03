@@ -15,6 +15,12 @@ const otpSchema = new mongoose.Schema(
       default: () => Date.now() + 5 * 60 * 1000,
       expires: 0,
     },
+
+    firstName: String,
+
+    lastName: String,
+
+    profilePic: String,
   },
   {
     timestamps: true,

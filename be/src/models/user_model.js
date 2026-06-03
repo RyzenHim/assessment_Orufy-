@@ -13,12 +13,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true,
+      lowercase: true,
+      trim: true,
     },
 
     phone: {
       type: String,
       unique: true,
       sparse: true,
+      trim: true,
     },
 
     profilePic: {
@@ -29,12 +32,6 @@ const userSchema = new mongoose.Schema(
       public_id: {
         type: String,
       },
-    },
-
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
     },
   },
   {
