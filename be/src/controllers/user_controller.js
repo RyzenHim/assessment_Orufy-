@@ -1,11 +1,7 @@
-const validator = require("validator");
 const User = require("../models/user_model");
 const Otp = require("../models/otp_model");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
-
-const User = require("../models/user_model");
-const Otp = require("../models/otp_model");
 
 const detectIdentifierType = (identifier) => {
   if (validator.isEmail(identifier)) {

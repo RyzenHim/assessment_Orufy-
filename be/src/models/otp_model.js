@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const otpSchema = new mongoose.Schema(
   {
     identifier: {
@@ -6,7 +7,7 @@ const otpSchema = new mongoose.Schema(
     },
 
     otp: {
-      type: String,
+      type: Number,
       required: true,
     },
 
@@ -26,3 +27,5 @@ const otpSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+module.exports = mongoose.model("Otp", otpSchema);

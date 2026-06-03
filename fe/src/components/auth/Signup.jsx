@@ -1,11 +1,34 @@
-import axiosInstance from "../../api/axios";
+import { useState } from "react";
+import { signUpApi } from "../../services/authService";
 
 const Signup = () => {
 
-    const handleSignup = (e) => {
-        e.preventDefault();
+    const [form, setForm] = useState({
+        firstName: "",
+        lastName: "",
+        identifier: ""
+    })
 
-        axiosInstance()
+
+
+    const handleChange = (e) => {
+
+        const { name, value } = e.target
+
+        setForm((prev) => ({
+
+            ...prev, [name]: value
+
+        }))
+
+
+    }
+
+    const handleSignup = async (e) => {
+        e.preventDefault();
+        console.log(form)
+
+        signUpApi(form)
 
 
     };
@@ -22,6 +45,9 @@ const Signup = () => {
                         First Name
                     </label>
                     <input
+                        value={form.firstName}
+                        name="firstName"
+                        onChange={handleChange}
                         type="text"
                         placeholder="Enter your first name"
                         className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
@@ -33,6 +59,9 @@ const Signup = () => {
                         Last Name
                     </label>
                     <input
+                        value={form.lastName}
+                        name="lastName"
+                        onChange={handleChange}
                         type="text"
                         placeholder="Enter your last name"
                         className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
@@ -44,6 +73,9 @@ const Signup = () => {
                         Email or Phone number
                     </label>
                     <input
+                        value={form.identifier}
+                        name="identifier"
+                        onChange={handleChange}
                         type="text"
                         placeholder="Enter email or phone number"
                         className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"

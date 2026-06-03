@@ -9,3 +9,12 @@ export const loginApi = async (data) => {
     throw error.response?.data || error;
   }
 };
+
+export const signUpApi = async (data) => {
+  try {
+    const res = await axiosInstance.post("/user/signup", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
