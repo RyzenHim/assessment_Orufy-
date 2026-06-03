@@ -1,170 +1,153 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Otp from "./Otp";
+import { loginApi, verifyLoginOtpApi } from "../../services/authService";
+import { storeUser } from "../../utils/session";
 
 const Login = () => {
-
+    const navigate = useNavigate();
+    const [identifier, setIdentifier] = useState("");
     const [showOtp, setShowOtp] = useState(false);
-
+    const [otp, setOtp] = useState("");
     const [timer, setTimer] = useState(20);
+    const [error, setError] = useState("");
+    const [info, setInfo] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [canResend, setCanResend] = useState(false);
-
-
-
-    // LOGIN FORM SUBMIT
-    const handleForm = (e) => {
-
-        e.preventDefault();
-
-        // API CALL HERE
-
-        setShowOtp(true);
-
-        setTimer(20);
-
-        setCanResend(false);
-
-    };
-
-
-
-    const handleResendOtp = () => {
-
-        // RESEND OTP API HERE
-
-        setTimer(20);
-
-        setCanResend(false);
-
-    };
-
-
-
-    // TIMER
     useEffect(() => {
-
-        let interval;
-
-        if (showOtp && timer > 0) {
-
-            interval = setInterval(() => {
-
-                setTimer((prev) => prev - 1);
-
-            }, 1000);
-
+        if (!showOtp || timer === 0) {
+            return undefined;
         }
 
-        if (timer === 0) {
-
-            setCanResend(true);
-
-        }
+        const interval = setInterval(() => {
+            setTimer((prev) => prev - 1);
+        }, 1000);
 
         return () => clearInterval(interval);
-
     }, [timer, showOtp]);
 
+    const requestOtp = async () => {
+        setIsSubmitting(true);
+        setError("");
 
+        try {
+            const response = await loginApi({ identifier });
+            setShowOtp(true);
+            setOtp("");
+            setTimer(20);
+            setInfo(response.message || "OTP sent successfully");
+        } catch (apiError) {
+            setError(apiError.message || "Unable to send OTP");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleForm = async (e) => {
+        e.preventDefault();
+
+        if (!showOtp) {
+            await requestOtp();
+            return;
+        }
+
+        if (otp.length !== 6) {
+            setError("Enter the 6-digit OTP");
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError("");
+
+        try {
+            const response = await verifyLoginOtpApi({ identifier, otp });
+            localStorage.setItem("token", response.token);
+            storeUser(response.user);
+            navigate("/products");
+        } catch (apiError) {
+            setError(apiError.message || "Unable to verify OTP");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        await requestOtp();
+    };
 
     return (
-
         <div className="min-w-full">
-
             <h1 className="mb-8 text-[24px] font-bold text-[#071074] leading-snug">
                 Login to your Productr Account
             </h1>
 
+            <form onSubmit={handleForm} className="space-y-4">
+                {!showOtp ? (
+                    <div>
+                        <label className="mb-1.5 block text-[14px] font-medium text-gray-700">
+                            Email or Phone number
+                        </label>
 
-            <form
-                onSubmit={handleForm}
-                className="space-y-4"
-            >
+                        <input
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            type="text"
+                            placeholder="Enter email or phone number"
+                            className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
+                        />
+                    </div>
+                ) : (
+                    <div>
+                        <p className="mb-2 text-[14px] text-gray-500">
+                            OTP sent to <span className="font-medium text-[#071074]">{identifier}</span>
+                        </p>
+                        <Otp value={otp} onChange={setOtp} />
+                    </div>
+                )}
 
-                {
-                    showOtp ? (
-
-                        <Otp />
-
-                    ) : (
-
-                        <div>
-
-                            <label className="mb-1.5 block text-[14px] font-medium text-gray-700">
-                                Email or Phone number
-                            </label>
-
-                            <input
-                                type="text"
-                                placeholder="Enter email or phone number"
-                                className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
-                            />
-
-                        </div>
-
-                    )
-                }
-
-
+                {info ? <p className="text-sm text-[#071074]">{info}</p> : null}
+                {error ? <p className="text-sm text-[#d14d4d]">{error}</p> : null}
 
                 <button
                     type="submit"
-                    className="h-[46px] w-full rounded-lg bg-[#071074] text-sm font-semibold text-white hover:bg-[#0a1899] transition-colors"
+                    disabled={isSubmitting}
+                    className="h-[46px] w-full rounded-lg bg-[#071074] text-sm font-semibold text-white transition-colors hover:bg-[#0a1899] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-
-                    {
-                        showOtp
+                    {isSubmitting
+                        ? "Please wait..."
+                        : showOtp
                             ? "Verify OTP"
-                            : "Login"
-                    }
-
+                            : "Login"}
                 </button>
-
             </form>
 
+            {showOtp ? (
+                <div className="mt-5 flex justify-center gap-2">
+                    <h1 className="text-[14px] font-medium opacity-50">
+                        Didn't receive OTP?
+                    </h1>
 
-
-            {
-                showOtp && (
-
-                    <div className="mt-5 flex justify-center gap-2">
-
-                        <h1 className="text-[14px] font-medium opacity-50">
-                            Didn't receive OTP?
-                        </h1>
-
-
-                        {
-                            canResend ? (
-
-                                <button
-                                    onClick={handleResendOtp}
-                                    className="text-[14px] font-medium text-[#071074]"
-                                >
-                                    Resend OTP
-                                </button>
-
-                            ) : (
-
-                                <button
-                                    disabled
-                                    className="cursor-not-allowed text-[14px] font-medium text-gray-400"
-                                >
-                                    Resend in {timer}s
-                                </button>
-
-                            )
-                        }
-
-                    </div>
-
-                )
-            }
-
+                    {timer === 0 ? (
+                        <button
+                            type="button"
+                            onClick={handleResendOtp}
+                            className="text-[14px] font-medium text-[#071074]"
+                        >
+                            Resend OTP
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            disabled
+                            className="cursor-not-allowed text-[14px] font-medium text-gray-400"
+                        >
+                            Resend in {timer}s
+                        </button>
+                    )}
+                </div>
+            ) : null}
         </div>
-
     );
-
 };
 
 export default Login;

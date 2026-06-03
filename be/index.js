@@ -21,7 +21,7 @@ connectDb();
 const user = require("./src/routes/user_route");
 app.use("/user", user);
 
-// const product = require("./src/routes/product_route");
-// app.use("product", product);
+const product = require("./src/routes/product_route");
+app.use("/product", product);
 
 app.listen(port, () => console.log("Server started at port:-", port));

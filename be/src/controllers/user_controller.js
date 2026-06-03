@@ -4,6 +4,8 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const sendOtpMail = require("../utils/sendOtpMail");
 
+const DEMO_IDENTIFIER = "demo@productr.local";
+
 const detectIdentifierType = (identifier) => {
   if (validator.isEmail(identifier)) {
     return "email";
@@ -15,6 +17,25 @@ const detectIdentifierType = (identifier) => {
 
   return null;
 };
+
+const createToken = (user) =>
+  jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+const sendOtp = async (identifier, identifierType, otp) => {
+  if (identifierType === "email") {
+    await sendOtpMail(identifier, otp);
+    return;
+  }
+
+  console.log(`OTP for ${identifier}: ${otp}`);
+};
+
+const buildUserPayload = (identifier, identifierType, fallbackData = {}) => ({
+  firstName: fallbackData.firstName || "User",
+  lastName: fallbackData.lastName || "",
+  email: identifierType === "email" ? identifier : undefined,
+  phone: identifierType === "phone" ? identifier : undefined,
+});
 
 exports.signup = async (req, res) => {
   try {
@@ -51,27 +72,86 @@ exports.signup = async (req, res) => {
 
     await Otp.findOneAndUpdate(
       { identifier },
-
       {
         firstName,
         lastName,
         identifier,
         otp,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
-
       {
         upsert: true,
         new: true,
       },
     );
 
-    if (identifierType === "email") {
-      await sendOtpMail(identifier, otp);
-    }
+    await sendOtp(identifier, identifierType, otp);
 
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.verifySignupOtp = async (req, res) => {
+  try {
+    const { identifier, otp } = req.body;
+
+    if (!identifier || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Identifier and OTP required",
+      });
+    }
+
+    const otpDoc = await Otp.findOne({ identifier });
+
+    if (!otpDoc) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired",
+      });
+    }
+
+    if (String(otpDoc.otp) !== String(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    const identifierType = detectIdentifierType(identifier);
+
+    if (!identifierType) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid email or phone number",
+      });
+    }
+
+    let user = await User.findOne({
+      $or: [{ email: identifier }, { phone: identifier }],
+    });
+
+    if (!user) {
+      user = await User.create(
+        buildUserPayload(identifier, identifierType, otpDoc),
+      );
+    }
+
+    await Otp.deleteOne({ identifier });
+
+    return res.status(200).json({
+      success: true,
+      message: "Signup successful",
+      token: createToken(user),
+      user,
     });
   } catch (err) {
     return res.status(500).json({
@@ -116,17 +196,18 @@ exports.login = async (req, res) => {
 
     await Otp.findOneAndUpdate(
       { identifier },
-
       {
         identifier,
         otp,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
-
       {
         upsert: true,
         new: true,
       },
     );
+
+    await sendOtp(identifier, identifierType, otp);
 
     return res.status(200).json({
       success: true,
@@ -151,9 +232,7 @@ exports.verifyLoginOtp = async (req, res) => {
       });
     }
 
-    const otpDoc = await Otp.findOne({
-      identifier,
-    });
+    const otpDoc = await Otp.findOne({ identifier });
 
     if (!otpDoc) {
       return res.status(400).json({
@@ -162,7 +241,7 @@ exports.verifyLoginOtp = async (req, res) => {
       });
     }
 
-    if (otpDoc.otp != otp) {
+    if (String(otpDoc.otp) !== String(otp)) {
       return res.status(400).json({
         success: false,
         message: "Invalid OTP",
@@ -173,22 +252,19 @@ exports.verifyLoginOtp = async (req, res) => {
       $or: [{ email: identifier }, { phone: identifier }],
     });
 
-    const token = jwt.sign(
-      { id: user._id },
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please signup.",
+      });
+    }
 
-      process.env.JWT_SECRET,
-
-      { expiresIn: "7d" },
-    );
-
-    await Otp.deleteOne({
-      identifier,
-    });
+    await Otp.deleteOne({ identifier });
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
+      token: createToken(user),
       user,
     });
   } catch (err) {
@@ -199,49 +275,36 @@ exports.verifyLoginOtp = async (req, res) => {
   }
 };
 
-exports.verifyLoginOtp = async (req, res) => {
+exports.getProfile = async (req, res) => {
   try {
-    const { identifier, otp } = req.body;
+    const authHeader = req.headers.authorization;
+    let user = null;
 
-    const otpDoc = await Otp.findOne({
-      identifier,
-    });
-
-    if (!otpDoc) {
-      return res.status(400).json({
-        message: "OTP expired",
-      });
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      user = await User.findById(decoded.id);
     }
 
-    if (otpDoc.otp !== otp) {
-      return res.status(400).json({
-        message: "Invalid OTP",
-      });
+    if (!user) {
+      user = await User.findOne({ email: DEMO_IDENTIFIER });
     }
 
-    const user = await User.findOne({
-      $or: [{ email: identifier }, { phone: identifier }],
-    });
-
-    const token = jwt.sign(
-      { id: user._id },
-
-      process.env.JWT_SECRET,
-
-      { expiresIn: "7d" },
-    );
-
-    await Otp.deleteOne({
-      identifier,
-    });
+    if (!user) {
+      user = await User.create({
+        firstName: "Demo",
+        lastName: "Seller",
+        email: DEMO_IDENTIFIER,
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      token,
       user,
     });
   } catch (err) {
     return res.status(500).json({
+      success: false,
       message: err.message,
     });
   }
