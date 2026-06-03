@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 const Otp = ({ value, onChange }) => {
     const inputs = useRef([]);
-    const otp = value.padEnd(6, '').slice(0, 6).split('');
+    const otp = Array.from({ length: 6 }, (_, i) => value[i] || '');
 
     useEffect(() => {
         if (value.length === 6) {

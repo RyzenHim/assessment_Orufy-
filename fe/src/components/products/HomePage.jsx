@@ -30,18 +30,17 @@ const HomePage = () => {
 
   return (
     <section className='-mx-5 md:-mx-8'>
-      <div className='border-b border-[#e7eaf2] px-5 md:px-8'>
-        <div className='flex gap-8'>
+      <div className='border-b border-[#e7eaf2] px-5 overflow-x-auto md:px-8'>
+        <div className='flex gap-4 md:gap-8 min-w-max md:min-w-0'>
           {tabs.map((tab) => (
             <button
               key={tab.key}
               type='button'
               onClick={() => setActiveTab(tab.key)}
-              className={`border-b-2 px-1 py-5 text-[15px] font-medium transition ${
-                activeTab === tab.key
+              className={`border-b-2 px-1 py-5 text-[13px] md:text-[15px] font-medium transition whitespace-nowrap ${activeTab === tab.key
                   ? 'border-[#2f7ff7] text-[#394864]'
                   : 'border-transparent text-[#9aa4b8]'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -50,11 +49,11 @@ const HomePage = () => {
       </div>
 
       {isLoading ? (
-        <div className='flex min-h-[calc(100vh-9rem)] items-center justify-center px-5 text-[15px] text-[#7f8aa4] md:px-8'>
+        <div className='flex min-h-[calc(100vh-9rem)] items-center justify-center px-5 text-[14px] md:text-[15px] text-[#7f8aa4] md:px-8'>
           Loading products...
         </div>
       ) : filteredProducts.length ? (
-        <div className='grid gap-6 px-5 pt-8 md:px-8 lg:grid-cols-2 xl:grid-cols-3'>
+        <div className='grid gap-4 md:gap-6 px-5 pt-6 md:pt-8 md:px-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
           {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}

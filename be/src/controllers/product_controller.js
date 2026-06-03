@@ -1,5 +1,6 @@
 const Product = require("../models/product_model");
 const User = require("../models/user_model");
+const { cloudinary } = require("../config/cloudinary");
 
 const DEMO_IDENTIFIER = "demo@productr.local";
 
@@ -34,6 +35,12 @@ const validateProduct = (payload) => {
 
   if (!payload.images.length) {
     return "At least one product image is required";
+  }
+
+  // Expecting: images[] where each item has at least { url, public_id }
+  // url is currently sent from frontend as base64 data URL.
+  if (payload.images.some((img) => !img || !img.url)) {
+    return "All product images must include a url";
   }
 
   return null;
@@ -90,6 +97,20 @@ exports.getAllProducts = async (_req, res) => {
   }
 };
 
+const uploadImageToCloudinary = async ({ url, public_id }, index) => {
+  // Frontend sends base64 data URL in `url`
+  // Cloudinary expects either a base64 string (can be a data URL) or a file/URL.
+  const uploadResult = await cloudinary.uploader.upload(url, {
+    folder: "product-images",
+    public_id: public_id || `product-${index + 1}`,
+  });
+
+  return {
+    url: uploadResult.secure_url,
+    public_id: uploadResult.public_id,
+  };
+};
+
 exports.createProduct = async (req, res) => {
   try {
     const payload = normalizePayload(req.body);
@@ -104,12 +125,15 @@ exports.createProduct = async (req, res) => {
 
     const seller = await getDemoSeller();
 
+    const uploadedImages = await Promise.all(
+      payload.images.map((image, index) =>
+        uploadImageToCloudinary(image, index),
+      ),
+    );
+
     const product = await Product.create({
       ...payload,
-      images: payload.images.map((image, index) => ({
-        url: image.url,
-        public_id: image.public_id || image.name || `image-${index + 1}`,
-      })),
+      images: uploadedImages,
       seller: seller._id,
     });
 
@@ -138,14 +162,17 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
+    const uploadedImages = await Promise.all(
+      payload.images.map((image, index) =>
+        uploadImageToCloudinary(image, index),
+      ),
+    );
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       {
         ...payload,
-        images: payload.images.map((image, index) => ({
-          url: image.url,
-          public_id: image.public_id || image.name || `image-${index + 1}`,
-        })),
+        images: uploadedImages,
       },
       {
         new: true,
@@ -175,7 +202,8 @@ exports.updateProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    // Delete from Cloudinary first (best-effort), then from DB.
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -183,6 +211,24 @@ exports.deleteProduct = async (req, res) => {
         message: "Product not found",
       });
     }
+
+    if (Array.isArray(product.images) && product.images.length) {
+      await Promise.all(
+        product.images.map(async (image) => {
+          if (!image?.public_id) return;
+          try {
+            await cloudinary.uploader.destroy(image.public_id);
+          } catch (err) {
+            console.warn(
+              `[cloudinary] Failed to delete asset ${image.public_id}:`,
+              err?.message || err,
+            );
+          }
+        }),
+      );
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
 
     return res.status(200).json({
       success: true,

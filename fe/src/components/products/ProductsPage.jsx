@@ -21,7 +21,7 @@ const ProductsPage = () => {
 
   if (isLoading) {
     return (
-      <div className='flex min-h-[calc(100vh-8rem)] items-center justify-center text-[15px] text-[#7f8aa4]'>
+      <div className='flex min-h-[calc(100vh-8rem)] items-center justify-center text-[14px] md:text-[15px] text-[#7f8aa4]'>
         Loading products...
       </div>
     );
@@ -42,19 +42,19 @@ const ProductsPage = () => {
 
   return (
     <section>
-      <div className='mb-7 flex items-center justify-between gap-4'>
-        <h1 className='text-[22px] font-semibold text-[#34415d]'>Products</h1>
+      <div className='mb-6 md:mb-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+        <h1 className='text-[20px] md:text-[22px] font-semibold text-[#34415d]'>Products</h1>
         <button
           type='button'
           onClick={openAddModal}
-          className='flex items-center gap-2 text-[18px] font-medium text-[#4b5873]'
+          className='flex items-center gap-2 text-[14px] md:text-[18px] font-medium text-[#4b5873] hover:text-[#3d4b67] transition whitespace-nowrap'
         >
           <PlusIcon />
           <span>Add Products</span>
         </button>
       </div>
 
-      <div className='grid gap-6 lg:grid-cols-2 xl:grid-cols-3'>
+      <div className='grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
         {products.map((product) => (
           <ProductCard
             key={product.id}

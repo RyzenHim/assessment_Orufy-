@@ -10,11 +10,11 @@ const AuthLayout = () => {
     const [showSignup, setShowSignup] = useState(false);
 
     return (
-        <div className="h-screen w-screen overflow-hidden bg-[#F0F0F5] flex items-center justify-center p-10">
+        <div className="h-screen w-screen overflow-hidden bg-[#F0F0F5] flex items-center justify-center p-4">
 
             <div className="flex w-full h-full gap-10">
 
-                <div className="relative w-1/2 h-full flex-shrink-0 rounded-2xl overflow-hidden">
+                <div className="relative w-1/2 h-full flex-shrink-0 rounded-2xl overflow-hidden hidden md:flex">
                     <img
                         src={bigHeroImg}
                         alt="background"
@@ -35,7 +35,7 @@ const AuthLayout = () => {
                     </div>
                 </div>
 
-                <div className="flex w-1/2 h-full flex-col items-center justify-center">
+                <div className="flex w-full md:w-1/2 h-full flex-col items-center justify-center">
 
                     <div className="flex justify-center min-w-3/5 h-full  mt-30 ">
                         {showSignup ? <Signup /> : <Login />}
