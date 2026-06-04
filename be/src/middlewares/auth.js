@@ -1,4 +1,7 @@
-const secretKey = process.env.JWTS3CRET;
+const jwt = require("jsonwebtoken");
+const User = require("../models/user_model");
+
+const getUserIdFromToken = (decoded) => decoded?.id || decoded?._id;
 
 exports.auth = async (req, res, next) => {
   try {
@@ -24,18 +27,11 @@ exports.auth = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    const user = await User.findById(decoded._id).select("-password");
+    const userId = getUserIdFromToken(decoded);
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
-    }
-
-    if (user.isDeleted) {
-      return res.status(401).json({ message: "Account deleted" });
-    }
-
-    if (!user.isActive) {
-      return res.status(401).json({ message: "Account disabled" });
     }
 
     req.user = user;

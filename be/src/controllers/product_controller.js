@@ -37,8 +37,6 @@ const validateProduct = (payload) => {
     return "At least one product image is required";
   }
 
-  // Expecting: images[] where each item has at least { url, public_id }
-  // url is currently sent from frontend as base64 data URL.
   if (payload.images.some((img) => !img || !img.url)) {
     return "All product images must include a url";
   }
@@ -81,9 +79,15 @@ const getDemoSeller = async () => {
   return user;
 };
 
-exports.getAllProducts = async (_req, res) => {
+exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    // Return only products belonging to the authenticated seller
+    // (req.user is set by auth middleware)
+    const sellerId = req.user?._id;
+
+    const products = await Product.find({ seller: sellerId }).sort({
+      createdAt: -1,
+    });
 
     return res.status(200).json({
       success: true,
@@ -98,8 +102,6 @@ exports.getAllProducts = async (_req, res) => {
 };
 
 const uploadImageToCloudinary = async ({ url, public_id }, index) => {
-  // Frontend sends base64 data URL in `url`
-  // Cloudinary expects either a base64 string (can be a data URL) or a file/URL.
   const uploadResult = await cloudinary.uploader.upload(url, {
     folder: "product-images",
     public_id: public_id || `product-${index + 1}`,
@@ -168,12 +170,13 @@ exports.updateProduct = async (req, res) => {
       ),
     );
 
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, seller: req.user?._id },
       {
         ...payload,
         images: uploadedImages,
       },
+
       {
         new: true,
         runValidators: true,
@@ -203,7 +206,10 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     // Delete from Cloudinary first (best-effort), then from DB.
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({
+      _id: req.params.id,
+      seller: req.user?._id,
+    });
 
     if (!product) {
       return res.status(404).json({
@@ -244,7 +250,10 @@ exports.deleteProduct = async (req, res) => {
 
 exports.togglePublishStatus = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({
+      _id: req.params.id,
+      seller: req.user?._id,
+    });
 
     if (!product) {
       return res.status(404).json({

@@ -41,6 +41,7 @@ const TopBar = ({ profile, onLogout, onMenuToggle = () => { } }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const menuRef = useRef(null);
+    const avatarButtonRef = useRef(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const titleMap = {
         '/home': 'Home',
@@ -50,7 +51,12 @@ const TopBar = ({ profile, onLogout, onMenuToggle = () => { } }) => {
 
     useEffect(() => {
         const handleOutsideClick = (event) => {
-            if (!menuRef.current?.contains(event.target)) {
+            const avatarButtonEl = avatarButtonRef.current;
+            const clickedInsideMenu = !!menuRef.current?.contains(event.target);
+            const clickedAvatar = !!avatarButtonEl?.contains(event.target);
+
+            // If click is outside BOTH the avatar button and the menu, close it.
+            if (!clickedInsideMenu && !clickedAvatar) {
                 setIsMenuOpen(false);
             }
         };
@@ -90,6 +96,7 @@ const TopBar = ({ profile, onLogout, onMenuToggle = () => { } }) => {
 
                         <div className='relative' ref={menuRef}>
                             <button
+                                ref={avatarButtonRef}
                                 type='button'
                                 onClick={() => setIsMenuOpen((current) => !current)}
                                 className='flex items-center gap-2 text-[#4c5a74]'

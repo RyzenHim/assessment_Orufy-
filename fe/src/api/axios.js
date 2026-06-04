@@ -21,7 +21,14 @@ axiosInstance.interceptors.response.use(
 
     if (status === 401) {
       localStorage.removeItem("token");
-      alert("Session expired");
+      // Avoid breaking OTP flow while user is verifying login/signup
+      if (
+        !["/user/verify-login-otp", "/user/verify-signup-otp"].includes(
+          error?.config?.url,
+        )
+      ) {
+        alert("Session expired");
+      }
     }
 
     return Promise.reject(error);
