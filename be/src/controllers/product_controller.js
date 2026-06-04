@@ -79,11 +79,18 @@ const getDemoSeller = async () => {
   return user;
 };
 
+const getSellerId = async (req) => {
+  if (req.user?._id) {
+    return req.user._id;
+  }
+
+  const demoSeller = await getDemoSeller();
+  return demoSeller._id;
+};
+
 exports.getAllProducts = async (req, res) => {
   try {
-    // Return only products belonging to the authenticated seller
-    // (req.user is set by auth middleware)
-    const sellerId = req.user?._id;
+    const sellerId = await getSellerId(req);
 
     const products = await Product.find({ seller: sellerId }).sort({
       createdAt: -1,
@@ -125,7 +132,7 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    const seller = await getDemoSeller();
+    const sellerId = await getSellerId(req);
 
     const uploadedImages = await Promise.all(
       payload.images.map((image, index) =>
@@ -136,7 +143,7 @@ exports.createProduct = async (req, res) => {
     const product = await Product.create({
       ...payload,
       images: uploadedImages,
-      seller: seller._id,
+      seller: sellerId,
     });
 
     return res.status(201).json({
@@ -170,8 +177,10 @@ exports.updateProduct = async (req, res) => {
       ),
     );
 
+    const sellerId = await getSellerId(req);
+
     const product = await Product.findOneAndUpdate(
-      { _id: req.params.id, seller: req.user?._id },
+      { _id: req.params.id, seller: sellerId },
       {
         ...payload,
         images: uploadedImages,
@@ -206,9 +215,11 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     // Delete from Cloudinary first (best-effort), then from DB.
+    const sellerId = await getSellerId(req);
+
     const product = await Product.findOne({
       _id: req.params.id,
-      seller: req.user?._id,
+      seller: sellerId,
     });
 
     if (!product) {
@@ -250,9 +261,11 @@ exports.deleteProduct = async (req, res) => {
 
 exports.togglePublishStatus = async (req, res) => {
   try {
+    const sellerId = await getSellerId(req);
+
     const product = await Product.findOne({
       _id: req.params.id,
-      seller: req.user?._id,
+      seller: sellerId,
     });
 
     if (!product) {
