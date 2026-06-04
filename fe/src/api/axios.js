@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "",
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://assessment-orufy.onrender.com",
   withCredentials: true,
 });
 axiosInstance.interceptors.request.use((config) => {
@@ -21,14 +23,7 @@ axiosInstance.interceptors.response.use(
 
     if (status === 401) {
       localStorage.removeItem("token");
-      // Avoid breaking OTP flow while user is verifying login/signup
-      if (
-        !["/user/verify-login-otp", "/user/verify-signup-otp"].includes(
-          error?.config?.url,
-        )
-      ) {
-        alert("Session expired");
-      }
+      alert("Session expired");
     }
 
     return Promise.reject(error);
