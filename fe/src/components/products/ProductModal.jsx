@@ -350,32 +350,50 @@ const Field = ({ label, children }) => (
 const FieldError = ({ message }) =>
   message ? <p className='mt-1.5 text-[12px] text-[#c24646]'>{message}</p> : null;
 
-const Input = ({ value, onChange, placeholder, hasError = false }) => (
-  <input
-    value={value}
-    onChange={(event) => onChange(event.target.value)}
-    placeholder={placeholder}
-    className={`h-[40px] w-full rounded-[10px] border px-4 text-[14px] text-[#42506b] outline-none transition focus:border-[#8d96ea] ${hasError ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d4dceb]'}`}
-  />
-);
+const Input = ({ value, onChange, placeholder, hasError = false }) => {
+  const inputRef = useRef(null);
 
-const Select = ({ value, onChange, hasError = false }) => (
-  <div className='relative'>
-    <select
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className={`h-[40px] w-full appearance-none rounded-[10px] border px-4 text-[14px] text-[#42506b] outline-none transition focus:border-[#8d96ea] ${hasError ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d4dceb]'}`}
+  return (
+    <div
+      onClick={() => inputRef.current?.focus()}
+      className={`flex h-[40px] w-full cursor-text items-center rounded-[10px] border px-4 transition focus-within:border-[#8d96ea] ${hasError ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d4dceb] bg-white'}`}
     >
-      {productTypeOptions.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-    <div className='pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#43516c]'>
-      <ChevronDown />
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className='h-full w-full bg-transparent text-[14px] text-[#42506b] outline-none'
+      />
     </div>
-  </div>
-);
+  );
+};
+
+const Select = ({ value, onChange, hasError = false }) => {
+  const selectRef = useRef(null);
+
+  return (
+    <div
+      onClick={() => selectRef.current?.focus()}
+      className={`relative flex h-[40px] w-full items-center rounded-[10px] border px-4 transition focus-within:border-[#8d96ea] ${hasError ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d4dceb] bg-white'}`}
+    >
+      <select
+        ref={selectRef}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className='h-full w-full appearance-none bg-transparent pr-6 text-[14px] text-[#42506b] outline-none'
+      >
+        {productTypeOptions.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <div className='pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#43516c]'>
+        <ChevronDown />
+      </div>
+    </div>
+  );
+};
 
 export default ProductModal;

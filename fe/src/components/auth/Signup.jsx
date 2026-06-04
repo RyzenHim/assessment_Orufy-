@@ -103,13 +103,12 @@ const Signup = () => {
                             <label className="mb-1.5 block text-[14px] font-medium text-gray-700">
                                 First Name
                             </label>
-                            <input
+                            <AuthInput
                                 value={form.firstName}
                                 name="firstName"
                                 onChange={handleChange}
                                 type="text"
                                 placeholder="Enter your first name"
-                                className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
                             />
                         </div>
 
@@ -117,13 +116,12 @@ const Signup = () => {
                             <label className="mb-1.5 block text-sm font-medium text-gray-700">
                                 Last Name
                             </label>
-                            <input
+                            <AuthInput
                                 value={form.lastName}
                                 name="lastName"
                                 onChange={handleChange}
                                 type="text"
                                 placeholder="Enter your last name"
-                                className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
                             />
                         </div>
 
@@ -131,13 +129,12 @@ const Signup = () => {
                             <label className="mb-1.5 block text-sm font-medium text-gray-700">
                                 Email or Phone number
                             </label>
-                            <input
+                            <AuthInput
                                 value={form.identifier}
                                 name="identifier"
                                 onChange={handleChange}
                                 type="text"
                                 placeholder="Enter email or phone number"
-                                className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
                             />
                         </div>
                     </>
@@ -191,6 +188,27 @@ const Signup = () => {
                     )}
                 </div>
             ) : null}
+        </div>
+    );
+};
+
+const AuthInput = ({ value, name, onChange, type = "text", placeholder }) => {
+    return (
+        <div
+            onClick={(event) => {
+                const input = event.currentTarget.querySelector("input");
+                input?.focus();
+            }}
+            className="flex h-[46px] w-full cursor-text items-center rounded-lg border border-gray-300 px-4 focus-within:border-[#071074] focus-within:ring-1 focus-within:ring-[#071074]"
+        >
+            <input
+                value={value}
+                name={name}
+                onChange={onChange}
+                type={type}
+                placeholder={placeholder}
+                className="h-full w-full bg-transparent text-sm outline-none"
+            />
         </div>
     );
 };

@@ -1,8 +1,5 @@
 const Product = require("../models/product_model");
-const User = require("../models/user_model");
 const { cloudinary } = require("../config/cloudinary");
-
-const DEMO_IDENTIFIER = "demo@productr.local";
 
 const normalizePayload = (body = {}) => ({
   title: body.title?.trim(),
@@ -94,32 +91,9 @@ const formatProduct = (product) => ({
   updatedAt: product.updatedAt,
 });
 
-const getDemoSeller = async () => {
-  let user = await User.findOne({ email: DEMO_IDENTIFIER });
-
-  if (!user) {
-    user = await User.create({
-      firstName: "Demo",
-      lastName: "Seller",
-      email: DEMO_IDENTIFIER,
-    });
-  }
-
-  return user;
-};
-
-const getSellerId = async (req) => {
-  if (req.user?._id) {
-    return req.user._id;
-  }
-
-  const demoSeller = await getDemoSeller();
-  return demoSeller._id;
-};
-
 exports.getAllProducts = async (req, res) => {
   try {
-    const sellerId = await getSellerId(req);
+    const sellerId = req.user._id;
 
     const products = await Product.find({ seller: sellerId }).sort({
       createdAt: -1,
@@ -169,7 +143,7 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    const sellerId = await getSellerId(req);
+    const sellerId = req.user._id;
 
     const uploadedImages = await Promise.all(
       payload.images.map((image, index) =>
@@ -214,7 +188,7 @@ exports.updateProduct = async (req, res) => {
       ),
     );
 
-    const sellerId = await getSellerId(req);
+    const sellerId = req.user._id;
 
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, seller: sellerId },
@@ -251,8 +225,7 @@ exports.updateProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    // Delete from Cloudinary first (best-effort), then from DB.
-    const sellerId = await getSellerId(req);
+    const sellerId = req.user._id;
 
     const product = await Product.findOne({
       _id: req.params.id,
@@ -298,7 +271,7 @@ exports.deleteProduct = async (req, res) => {
 
 exports.togglePublishStatus = async (req, res) => {
   try {
-    const sellerId = await getSellerId(req);
+    const sellerId = req.user._id;
 
     const product = await Product.findOne({
       _id: req.params.id,

@@ -88,12 +88,11 @@ const Login = () => {
                             Email or Phone number
                         </label>
 
-                        <input
+                        <AuthInput
                             value={identifier}
                             onChange={(e) => setIdentifier(e.target.value)}
                             type="text"
                             placeholder="Enter email or phone number"
-                            className="h-[46px] w-full rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-[#071074] focus:ring-1 focus:ring-[#071074]"
                         />
                     </div>
                 ) : (
@@ -146,6 +145,26 @@ const Login = () => {
                     )}
                 </div>
             ) : null}
+        </div>
+    );
+};
+
+const AuthInput = ({ value, onChange, type = "text", placeholder }) => {
+    return (
+        <div
+            onClick={(event) => {
+                const input = event.currentTarget.querySelector("input");
+                input?.focus();
+            }}
+            className="flex h-[46px] w-full cursor-text items-center rounded-lg border border-gray-300 px-4 focus-within:border-[#071074] focus-within:ring-1 focus-within:ring-[#071074]"
+        >
+            <input
+                value={value}
+                onChange={onChange}
+                type={type}
+                placeholder={placeholder}
+                className="h-full w-full bg-transparent text-sm outline-none"
+            />
         </div>
     );
 };

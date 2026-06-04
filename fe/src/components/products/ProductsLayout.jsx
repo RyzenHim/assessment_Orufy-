@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
@@ -26,6 +26,11 @@ const ProductsLayout = () => {
   const [profile, setProfile] = useState(getStoredUser());
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  const logout = useCallback(() => {
+    clearSession();
+    navigate('/');
+  }, [navigate]);
+
   useEffect(() => {
     if (!toast) {
       return undefined;
@@ -41,6 +46,10 @@ const ProductsLayout = () => {
         const productList = await getProductsApi();
         setProducts(productList);
       } catch (error) {
+        if (error?.expired || error?.message?.toLowerCase().includes('not authorized')) {
+          logout();
+          return;
+        }
         setToast({
           type: 'error',
           message: error.message || 'Unable to load products',
@@ -51,7 +60,7 @@ const ProductsLayout = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [logout]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -59,7 +68,11 @@ const ProductsLayout = () => {
         const user = await getProfileApi();
         setProfile(user);
         storeUser(user);
-      } catch {
+      } catch (error) {
+        if (error?.expired || error?.message?.toLowerCase().includes('not authorized')) {
+          logout();
+          return;
+        }
         const storedUser = getStoredUser();
         if (storedUser) {
           setProfile(storedUser);
@@ -68,7 +81,7 @@ const ProductsLayout = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [logout]);
 
   const openAddModal = () => {
     setModalState({ mode: 'add', product: createEmptyProductDraft() });
@@ -143,11 +156,6 @@ const ProductsLayout = () => {
         message: error.message || 'Unable to update publish status',
       });
     }
-  };
-
-  const logout = () => {
-    clearSession();
-    navigate('/');
   };
 
   const openMobileSidebar = () => setIsMobileSidebarOpen(true);

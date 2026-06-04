@@ -4,8 +4,6 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const sendOtpMail = require("../utils/sendOtpMail");
 
-const DEMO_IDENTIFIER = "demo@productr.local";
-
 const detectIdentifierType = (identifier) => {
   if (validator.isEmail(identifier)) {
     return "email";
@@ -277,30 +275,9 @@ exports.verifyLoginOtp = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    let user = null;
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      user = await User.findById(decoded.id);
-    }
-
-    if (!user) {
-      user = await User.findOne({ email: DEMO_IDENTIFIER });
-    }
-
-    if (!user) {
-      user = await User.create({
-        firstName: "Demo",
-        lastName: "Seller",
-        email: DEMO_IDENTIFIER,
-      });
-    }
-
     return res.status(200).json({
       success: true,
-      user,
+      user: req.user,
     });
   } catch (err) {
     return res.status(500).json({
