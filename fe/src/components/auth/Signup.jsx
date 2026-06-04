@@ -17,6 +17,9 @@ const Signup = () => {
     const [error, setError] = useState("");
     const [info, setInfo] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [otpFromServer, setOtpFromServer] = useState("");
+    const [serverOtpVisible, setServerOtpVisible] = useState(false);
+
 
     useEffect(() => {
         if (!showOtp || timer === 0) {
@@ -41,15 +44,20 @@ const Signup = () => {
     const requestOtp = async () => {
         setIsSubmitting(true);
         setError("");
+        setInfo("Generating OTP...");
+        setServerOtpVisible(false);
 
         try {
             const response = await signUpApi(form);
             setShowOtp(true);
             setOtp("");
+            setOtpFromServer(response.otp || "");
+            setServerOtpVisible(true);
             setTimer(20);
-            setInfo(response.message || "OTP sent successfully");
+            setInfo("OTP sent. Please check your inbox.");
         } catch (apiError) {
             setError(apiError.message || "Unable to send OTP");
+            setServerOtpVisible(false);
         } finally {
             setIsSubmitting(false);
         }
@@ -143,9 +151,24 @@ const Signup = () => {
                         <p className="mb-2 text-[14px] text-gray-500">
                             OTP sent to <span className="font-medium text-[#071074]">{form.identifier}</span>
                         </p>
+
+                        {serverOtpVisible ? (
+                            <p className="mb-2 text-[13px] text-gray-600">
+                                <span className="font-semibold text-[#071074]">Your OTP:</span>{" "}
+                                <span className="font-mono font-semibold tracking-widest text-[#071074]">
+                                    {otpFromServer}
+                                </span>
+                            </p>
+                        ) : null}
+
                         <Otp value={otp} onChange={setOtp} />
+
+                        <p className="mt-3 text-[13px] text-gray-600">
+                            Note: OTP delivery may take a few moments.
+                        </p>
                     </div>
                 )}
+
 
                 {info ? <p className="text-sm text-[#071074]">{info}</p> : null}
                 {error ? <p className="text-sm text-[#d14d4d]">{error}</p> : null}
@@ -156,10 +179,11 @@ const Signup = () => {
                     className="h-[46px] w-full rounded-lg bg-[#071074] text-sm font-semibold text-white transition-colors hover:bg-[#0a1899] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     {isSubmitting
-                        ? "Please wait..."
+                        ? "Generating..."
                         : showOtp
                             ? "Verify OTP"
                             : "Sign Up"}
+
                 </button>
             </form>
 

@@ -88,6 +88,7 @@ exports.signup = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
+      otp,
     });
   } catch (err) {
     return res.status(500).json({
@@ -210,6 +211,7 @@ exports.login = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
+      otp,
     });
   } catch (err) {
     return res.status(500).json({
