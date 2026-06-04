@@ -1,6 +1,9 @@
 import { useId, useRef, useState } from 'react';
 import { createEmptyProductDraft, productTypeOptions } from './productMockData';
 
+const MAX_IMAGE_SIZE_MB = 5;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
 const CloseIcon = () => (
   <svg viewBox='0 0 24 24' className='h-6 w-6' fill='none' stroke='currentColor' strokeWidth='2'>
     <path d='M6 6l12 12M18 6 6 18' />
@@ -30,12 +33,62 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
+const validateProductForm = (form) => {
+  const errors = {};
+  const quantityStock = Number(form.quantityStock);
+  const mrp = Number(form.mrp);
+  const sellingPrice = Number(form.sellingPrice);
+
+  if (!form.title.trim()) {
+    errors.title = 'Product name is required.';
+  }
+
+  if (!productTypeOptions.includes(form.category)) {
+    errors.category = 'Choose a valid product type.';
+  }
+
+  if (form.quantityStock === '' || Number.isNaN(quantityStock)) {
+    errors.quantityStock = 'Quantity stock must be a valid number.';
+  } else if (quantityStock < 0) {
+    errors.quantityStock = 'Quantity stock cannot be negative.';
+  }
+
+  if (form.mrp === '' || Number.isNaN(mrp)) {
+    errors.mrp = 'MRP must be a valid number.';
+  } else if (mrp < 0) {
+    errors.mrp = 'MRP cannot be negative.';
+  }
+
+  if (form.sellingPrice === '' || Number.isNaN(sellingPrice)) {
+    errors.sellingPrice = 'Selling price must be a valid number.';
+  } else if (sellingPrice < 0) {
+    errors.sellingPrice = 'Selling price cannot be negative.';
+  } else if (!Number.isNaN(mrp) && sellingPrice > mrp) {
+    errors.sellingPrice = 'Selling price cannot be greater than MRP.';
+  }
+
+  if (!form.brandName.trim()) {
+    errors.brandName = 'Brand name is required.';
+  }
+
+  if (!form.images.length) {
+    errors.images = 'At least one product image is required.';
+  }
+
+  return errors;
+};
+
 const ProductModal = ({ mode, product, onClose, onSubmit }) => {
   const [form, setForm] = useState(product ?? createEmptyProductDraft());
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputId = useId();
   const fileInputRef = useRef(null);
 
   const updateField = (field, value) => {
+    setErrors((current) => ({ ...current, [field]: '' }));
+    setSubmitError('');
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -46,26 +99,66 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
       return;
     }
 
-    const nextImages = await Promise.all(
-      files.map(async (file) => ({
-        id: `${file.name}-${crypto.randomUUID()}`,
-        name: file.name,
-        public_id: file.name,
-        url: await readFileAsDataUrl(file),
-      })),
-    );
+    try {
+      const invalidFile = files.find((file) => !file.type.startsWith('image/'));
+      if (invalidFile) {
+        throw new Error(`${invalidFile.name} is not a valid image file.`);
+      }
 
-    setForm((current) => ({
-      ...current,
-      images: [...current.images, ...nextImages],
-    }));
+      const oversizedFile = files.find((file) => file.size > MAX_IMAGE_SIZE_BYTES);
+      if (oversizedFile) {
+        const sizeInMb = (oversizedFile.size / (1024 * 1024)).toFixed(2);
+        throw new Error(
+          `${oversizedFile.name} is ${sizeInMb}MB. Maximum allowed image size is ${MAX_IMAGE_SIZE_MB}MB.`,
+        );
+      }
 
-    event.target.value = '';
+      const nextImages = await Promise.all(
+        files.map(async (file) => ({
+          id: `${file.name}-${crypto.randomUUID()}`,
+          name: file.name,
+          public_id: file.name,
+          url: await readFileAsDataUrl(file),
+        })),
+      );
+
+      setForm((current) => ({
+        ...current,
+        images: [...current.images, ...nextImages],
+      }));
+      setErrors((current) => ({ ...current, images: '' }));
+      setSubmitError('');
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        images: error.message || 'Unable to read image file.',
+      }));
+    } finally {
+      event.target.value = '';
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onSubmit(form);
+    const validationErrors = validateProductForm(form);
+
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
+      setSubmitError('Please fix the highlighted fields.');
+      return;
+    }
+
+    setErrors({});
+    setSubmitError('');
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit(form);
+    } catch (error) {
+      setSubmitError(error.message || 'Unable to save product.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isAddMode = mode === 'add';
@@ -84,19 +177,29 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit}>
           <div className='max-h-[72vh] space-y-4 overflow-y-auto px-6 py-5'>
+            {submitError ? (
+              <div className='rounded-[10px] border border-[#f0c7c7] bg-[#fff5f5] px-4 py-3 text-[13px] text-[#c24646]'>
+                {submitError}
+              </div>
+            ) : null}
+
             <Field label='Product Name'>
               <Input
                 value={form.title}
                 onChange={(value) => updateField('title', value)}
                 placeholder='Enter product name'
+                hasError={!!errors.title}
               />
+              <FieldError message={errors.title} />
             </Field>
 
             <Field label='Product Type'>
               <Select
                 value={form.category}
                 onChange={(value) => updateField('category', value)}
+                hasError={!!errors.category}
               />
+              <FieldError message={errors.category} />
             </Field>
 
             <Field label='Quantity Stock'>
@@ -104,7 +207,9 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
                 value={form.quantityStock}
                 onChange={(value) => updateField('quantityStock', value)}
                 placeholder='Total numbers of Stock available'
+                hasError={!!errors.quantityStock}
               />
+              <FieldError message={errors.quantityStock} />
             </Field>
 
             <Field label='MRP'>
@@ -112,7 +217,9 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
                 value={form.mrp}
                 onChange={(value) => updateField('mrp', value)}
                 placeholder='Total numbers of Stock available'
+                hasError={!!errors.mrp}
               />
+              <FieldError message={errors.mrp} />
             </Field>
 
             <Field label='Selling Price'>
@@ -120,7 +227,9 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
                 value={form.sellingPrice}
                 onChange={(value) => updateField('sellingPrice', value)}
                 placeholder='Total numbers of Stock available'
+                hasError={!!errors.sellingPrice}
               />
+              <FieldError message={errors.sellingPrice} />
             </Field>
 
             <Field label='Brand Name'>
@@ -128,7 +237,9 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
                 value={form.brandName}
                 onChange={(value) => updateField('brandName', value)}
                 placeholder='Enter brand name'
+                hasError={!!errors.brandName}
               />
+              <FieldError message={errors.brandName} />
             </Field>
 
             <div>
@@ -156,7 +267,7 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
               />
 
               {form.images.length ? (
-                <div className='rounded-[10px] border border-dashed border-[#d8dfeb] p-3'>
+                <div className={`rounded-[10px] border border-dashed p-3 ${errors.images ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d8dfeb]'}`}>
                   <div className='flex flex-wrap gap-3'>
                     {form.images.map((image) => (
                       <div
@@ -170,12 +281,13 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
                         />
                         <button
                           type='button'
-                          onClick={() =>
+                          onClick={() => {
                             setForm((current) => ({
                               ...current,
                               images: removeImageById(current.images, image.id),
-                            }))
-                          }
+                            }));
+                            setErrors((current) => ({ ...current, images: '' }));
+                          }}
                           className='absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full border border-[#d8dfeb] bg-white text-[#4f5d78]'
                         >
                           <SmallCloseIcon />
@@ -187,12 +299,13 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
               ) : (
                 <label
                   htmlFor={fileInputId}
-                  className='flex h-[80px] cursor-pointer flex-col items-center justify-center rounded-[10px] border border-dashed border-[#d8dfeb] text-center text-[#a1abc0]'
+                  className={`flex h-[80px] cursor-pointer flex-col items-center justify-center rounded-[10px] border border-dashed text-center text-[#a1abc0] ${errors.images ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d8dfeb]'}`}
                 >
                   <span className='text-[14px]'>Enter Description</span>
                   <span className='text-[18px] font-semibold text-[#3b4863]'>Browse</span>
                 </label>
               )}
+              <FieldError message={errors.images} />
             </div>
 
             <Field label='Exchange or return eligibility'>
@@ -214,9 +327,10 @@ const ProductModal = ({ mode, product, onClose, onSubmit }) => {
             <div className='flex justify-end'>
               <button
                 type='submit'
-                className='min-w-[84px] rounded-[10px] bg-[#2d37d6] px-5 py-3 text-[14px] font-medium text-white shadow-[0_10px_20px_rgba(45,55,214,0.22)] transition hover:bg-[#2530c9]'
+                disabled={isSubmitting}
+                className='min-w-[84px] rounded-[10px] bg-[#2d37d6] px-5 py-3 text-[14px] font-medium text-white shadow-[0_10px_20px_rgba(45,55,214,0.22)] transition hover:bg-[#2530c9] disabled:cursor-not-allowed disabled:opacity-70'
               >
-                {isAddMode ? 'Create' : 'Update'}
+                {isSubmitting ? 'Saving...' : isAddMode ? 'Create' : 'Update'}
               </button>
             </div>
           </div>
@@ -233,21 +347,24 @@ const Field = ({ label, children }) => (
   </label>
 );
 
-const Input = ({ value, onChange, placeholder }) => (
+const FieldError = ({ message }) =>
+  message ? <p className='mt-1.5 text-[12px] text-[#c24646]'>{message}</p> : null;
+
+const Input = ({ value, onChange, placeholder, hasError = false }) => (
   <input
     value={value}
     onChange={(event) => onChange(event.target.value)}
     placeholder={placeholder}
-    className='h-[40px] w-full rounded-[10px] border border-[#d4dceb] px-4 text-[14px] text-[#42506b] outline-none transition focus:border-[#8d96ea]'
+    className={`h-[40px] w-full rounded-[10px] border px-4 text-[14px] text-[#42506b] outline-none transition focus:border-[#8d96ea] ${hasError ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d4dceb]'}`}
   />
 );
 
-const Select = ({ value, onChange }) => (
+const Select = ({ value, onChange, hasError = false }) => (
   <div className='relative'>
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className='h-[40px] w-full appearance-none rounded-[10px] border border-[#d4dceb] px-4 text-[14px] text-[#42506b] outline-none transition focus:border-[#8d96ea]'
+      className={`h-[40px] w-full appearance-none rounded-[10px] border px-4 text-[14px] text-[#42506b] outline-none transition focus:border-[#8d96ea] ${hasError ? 'border-[#e28a8a] bg-[#fffafa]' : 'border-[#d4dceb]'}`}
     >
       {productTypeOptions.map((option) => (
         <option key={option} value={option}>

@@ -22,15 +22,44 @@ const normalizePayload = (body = {}) => ({
 });
 
 const validateProduct = (payload) => {
-  if (
-    !payload.title ||
-    !payload.category ||
-    !payload.brandName ||
-    Number.isNaN(payload.quantityStock) ||
-    Number.isNaN(payload.mrp) ||
-    Number.isNaN(payload.sellingPrice)
-  ) {
-    return "All required product fields must be filled";
+  if (!payload.title) {
+    return "Product name is required.";
+  }
+
+  if (!payload.category || !Product.schema.path("category").enumValues.includes(payload.category)) {
+    return "Product type must be one of: Foods, Electronics, Clothes, Beauty Products, Others.";
+  }
+
+  if (!payload.brandName) {
+    return "Brand name is required.";
+  }
+
+  if (Number.isNaN(payload.quantityStock)) {
+    return "Quantity stock must be a valid number.";
+  }
+
+  if (payload.quantityStock < 0) {
+    return "Quantity stock cannot be negative.";
+  }
+
+  if (Number.isNaN(payload.mrp)) {
+    return "MRP must be a valid number.";
+  }
+
+  if (payload.mrp < 0) {
+    return "MRP cannot be negative.";
+  }
+
+  if (Number.isNaN(payload.sellingPrice)) {
+    return "Selling price must be a valid number.";
+  }
+
+  if (payload.sellingPrice < 0) {
+    return "Selling price cannot be negative.";
+  }
+
+  if (payload.sellingPrice > payload.mrp) {
+    return "Selling price cannot be greater than MRP.";
   }
 
   if (!payload.images.length) {
@@ -109,15 +138,23 @@ exports.getAllProducts = async (req, res) => {
 };
 
 const uploadImageToCloudinary = async ({ url, public_id }, index) => {
-  const uploadResult = await cloudinary.uploader.upload(url, {
-    folder: "product-images",
-    public_id: public_id || `product-${index + 1}`,
-  });
+  try {
+    const uploadResult = await cloudinary.uploader.upload(url, {
+      folder: "product-images",
+      public_id: public_id || `product-${index + 1}`,
+    });
 
-  return {
-    url: uploadResult.secure_url,
-    public_id: uploadResult.public_id,
-  };
+    return {
+      url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+    };
+  } catch (error) {
+    const imageName = public_id || `image-${index + 1}`;
+    const reason =
+      error?.message ||
+      "Image upload failed. Please try a smaller image or a different file.";
+    throw new Error(`Unable to upload ${imageName}: ${reason}`);
+  }
 };
 
 exports.createProduct = async (req, res) => {

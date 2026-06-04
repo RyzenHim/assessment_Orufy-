@@ -20,8 +20,6 @@ const otpSchema = new mongoose.Schema(
     firstName: String,
 
     lastName: String,
-
-    // profilePic: String,
   },
   {
     timestamps: true,

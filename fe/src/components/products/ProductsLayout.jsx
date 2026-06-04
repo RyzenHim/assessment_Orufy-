@@ -96,33 +96,19 @@ const ProductsLayout = () => {
   const closeModal = () => setModalState({ mode: null, product: null });
 
   const createProduct = async (draft) => {
-    try {
-      const createdProduct = await createProductApi(draft);
-      setProducts((current) => [createdProduct, ...current]);
-      setToast({ type: 'success', message: 'Product added Successfully' });
-      closeModal();
-    } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.message || 'Unable to create product',
-      });
-    }
+    const createdProduct = await createProductApi(draft);
+    setProducts((current) => [createdProduct, ...current]);
+    setToast({ type: 'success', message: 'Product added Successfully' });
+    closeModal();
   };
 
   const updateProduct = async (draft) => {
-    try {
-      const updatedProduct = await updateProductApi(draft.id, draft);
-      setProducts((current) =>
-        current.map((item) => (item.id === draft.id ? updatedProduct : item)),
-      );
-      setToast({ type: 'success', message: 'Product updated Successfully' });
-      closeModal();
-    } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.message || 'Unable to update product',
-      });
-    }
+    const updatedProduct = await updateProductApi(draft.id, draft);
+    setProducts((current) =>
+      current.map((item) => (item.id === draft.id ? updatedProduct : item)),
+    );
+    setToast({ type: 'success', message: 'Product updated Successfully' });
+    closeModal();
   };
 
   const removeProduct = async () => {
@@ -175,7 +161,6 @@ const ProductsLayout = () => {
     openEditModal,
     openDeleteModal: setDeleteTarget,
     togglePublishState,
-    logout,
   };
 
   return (
