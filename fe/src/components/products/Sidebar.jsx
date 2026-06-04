@@ -38,44 +38,54 @@ const Sidebar = ({ isOpen = false, onClose = () => { } }) => {
         <>
             {/* Mobile Sidebar */}
             {isOpen ? (
-                <aside className='fixed left-0 top-0 z-40 flex h-screen w-60 flex-col border-r border-white/6 bg-[#202632] text-[#95a1ba] md:hidden'>
-                    <div className='flex items-center justify-between px-4 pb-3 pt-5'>
-                        <img src={logo} alt='Productr' className='h-9 w-auto' />
-                        <button
-                            onClick={onClose}
-                            className='cursor-pointer rounded-lg p-2 hover:bg-white/10 transition'
-                            aria-label='Close sidebar'
-                        >
-                            <CloseIcon />
-                        </button>
-                    </div>
+                <div className='fixed inset-0 z-40 md:hidden'>
+                    <button
+                        type='button'
+                        onClick={onClose}
+                        className='absolute inset-0 bg-[#0f172a]/45 backdrop-blur-[1px]'
+                        aria-label='Close sidebar backdrop'
+                    />
 
-                    <div className='px-2 pb-4'>
-                        <div className='flex h-12 items-center gap-3 rounded-lg bg-white/6 px-4 text-[#7f8aa4] ring-1 ring-inset ring-white/4'>
-                            <SearchIcon />
-                            <span className='text-[14px]'>Search</span>
+                    <aside className='relative left-0 top-0 flex h-screen w-60 flex-col border-r border-white/6 bg-[#202632] text-[#95a1ba] shadow-[0_20px_45px_rgba(0,0,0,0.28)]'>
+                        <div className='flex items-center justify-between px-4 pb-3 pt-5'>
+                            <img src={logo} alt='Productr' className='h-9 w-auto' />
+                            <button
+                                type='button'
+                                onClick={onClose}
+                                className='cursor-pointer rounded-lg p-2 transition hover:bg-white/10'
+                                aria-label='Close sidebar'
+                            >
+                                <CloseIcon />
+                            </button>
                         </div>
-                    </div>
 
-                    <div className='border-t border-white/6 px-2 pt-4'>
-                        <nav className='space-y-1.5'>
-                            {sidebarLinks.map(({ to, label, icon: Icon }) => (
-                                <NavLink
-                                    key={to}
-                                    to={to}
-                                    onClick={onClose}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-3 rounded-lg px-4 py-3 text-[14px] font-medium transition ${isActive ? 'text-white' : 'hover:bg-white/5 hover:text-white'
-                                        }`
-                                    }
-                                >
-                                    <Icon />
-                                    <span>{label}</span>
-                                </NavLink>
-                            ))}
-                        </nav>
-                    </div>
-                </aside>
+                        <div className='px-2 pb-4'>
+                            <div className='flex h-12 items-center gap-3 rounded-lg bg-white/6 px-4 text-[#7f8aa4] ring-1 ring-inset ring-white/4'>
+                                <SearchIcon />
+                                <span className='text-[14px]'>Search</span>
+                            </div>
+                        </div>
+
+                        <div className='border-t border-white/6 px-2 pt-4'>
+                            <nav className='space-y-1.5'>
+                                {sidebarLinks.map(({ to, label, icon: Icon }) => (
+                                    <NavLink
+                                        key={to}
+                                        to={to}
+                                        onClick={onClose}
+                                        className={({ isActive }) =>
+                                            `flex items-center gap-3 rounded-lg px-4 py-3 text-[14px] font-medium transition ${isActive ? 'text-white' : 'hover:bg-white/5 hover:text-white'
+                                            }`
+                                        }
+                                    >
+                                        <Icon />
+                                        <span>{label}</span>
+                                    </NavLink>
+                                ))}
+                            </nav>
+                        </div>
+                    </aside>
+                </div>
             ) : null}
 
             {/* Desktop Sidebar */}

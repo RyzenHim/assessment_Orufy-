@@ -24,6 +24,7 @@ const ProductsLayout = () => {
   const [toast, setToast] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState(getStoredUser());
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!toast) {
@@ -163,6 +164,9 @@ const ProductsLayout = () => {
     navigate('/');
   };
 
+  const openMobileSidebar = () => setIsMobileSidebarOpen(true);
+  const closeMobileSidebar = () => setIsMobileSidebarOpen(false);
+
   const contextValue = {
     products,
     isLoading,
@@ -176,9 +180,13 @@ const ProductsLayout = () => {
 
   return (
     <div className='min-h-screen bg-[#fbfcff] text-[#3d4b67]'>
-      <Sidebar />
+      <Sidebar isOpen={isMobileSidebarOpen} onClose={closeMobileSidebar} />
       <div className='min-h-screen pl-0 md:pl-60'>
-        <TopBar profile={profile} onLogout={logout} />
+        <TopBar
+          profile={profile}
+          onLogout={logout}
+          onMenuToggle={openMobileSidebar}
+        />
         <main className='px-5 pb-8 pt-24 md:px-8'>
           <Outlet context={contextValue} />
         </main>
